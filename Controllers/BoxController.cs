@@ -29,6 +29,27 @@ public class BoxController : ControllerBase
         await this._context.SaveChangesAsync(); //Commit changement bdd
         return Ok(await this._context.Boxes.ToListAsync());
     }
+    //Permet de modifier un box
+    [HttpPut("UpdateBox")]
+    public async Task<ActionResult<List<Box>>> UpdateBox([FromBody] Box request)
+    {
+        if(request == null) {
+            return BadRequest();
+        } 
+        var box = await this._context.Boxes.FindAsync(request.id);
+        if (box == null){
+            return BadRequest();
+        }
+        if (box.type != null){
+            box.type = request.type;
+        }
+        if (box.terrain != null){
+            box.terrain = request.terrain;
+        }
+        this._context.Boxes.Update(box);  
+        this._context.SaveChanges(); 
+        return Ok(); 
+    }
     //Permet de changer le box d'un oiseau
     [HttpPut("UpdateBirdBox")]
     public async Task<ActionResult<List<Box>>> UpdateBirdBox([FromBody] int BirdId, int BoxId)
