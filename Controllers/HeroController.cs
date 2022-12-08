@@ -12,8 +12,6 @@ public class HeroController : ControllerBase
         new Hero { ID = 1, name = "Iron Man", Firstname="Tony", LastName="Stark", Place="Somewhere"},
         new Hero { ID = 2, name = "Captain America", Firstname="Steve", LastName="Roger", Place="Queens"},
         new Hero { ID = 3, name = "Hulk", Firstname="Bruce", LastName="Banner", Place="Somewhere"},
-        new Hero { ID = 4, name = "Black Widow", Firstname="flemme", LastName="flemme", Place="Somewhere"},
-        new Hero { ID = 5, name = "flemmeman", Firstname="truc", LastName="autretruc", Place="Somewhere"}
     };
 
     private readonly ApplicationDbContext _context;
@@ -22,13 +20,26 @@ public class HeroController : ControllerBase
         this._context = dbContext;
     }
     
+    //Permet de récuperer la liste de tous les héros de la bdd
     [HttpGet("/GetHero")]
     public async Task<ActionResult<List<Hero>>> Get()
     {
         var myHeroes = await _context.Heroes.ToListAsync();
         return Ok(myHeroes);
     }
-
+    //Permet de récuperer 1 hero de la bdd en fonction de son id
+    [HttpGet("{id}")]
+    public async Task<ActionResult<Hero>> Get(int id)
+    {
+        var myHeroes = await _context.Heroes.ToListAsync();
+        var hero = myHeroes.Find(x => x.ID == id);
+        if (hero == null)
+        {
+            return NotFound("Hero not Found");
+        }
+        return Ok(hero);
+    }
+    // Permet de créer un hero dans la bdd
     [HttpPost("/PostHero")]
     public async Task<ActionResult<List<Hero>>> CreateHero([FromBody] Hero hero)
     {
@@ -39,33 +50,50 @@ public class HeroController : ControllerBase
     }
 
     [HttpPut]
-    public async Task<ActionResult<List<Hero>>> UpdateHero(Hero request)
+    public async Task<ActionResult<List<Hero>>> UpdateHero([FromBody] Hero request)
     {
-
-        var hero = heroes.Find(hero=> hero.ID == request.ID);
-        if (hero == null)
-        {
-            return BadRequest(request);
+        if(request == null) {
+            return BadRequest();
+        } 
+        var hero = await this._context.Heroes.FindAsync(request.ID);
+        if(hero == null) {
+            return BadRequest();
+        } 
+        if(hero.name != null) {
+            hero.name = request.name; 
         }
-
-        hero.name = request.name;
-        hero.Firstname = request.Firstname;
-        hero.LastName = request.LastName;
-        hero.Place = request.Place;
-
-        return heroes;
+        if(hero.Firstname != null) {
+            hero.Firstname = request.Firstname; 
+        } 
+        if(hero.LastName != null) {
+            hero.LastName = request.LastName;
+        }
+        if(hero.Place != null) {
+            hero.Place = request.Place; 
+        } 
+        this._context.Heroes.Update(hero);  
+        this._context.SaveChanges(); 
+        return Ok(); 
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Hero>> Get(int id)
-    {
-        var hero = heroes.Find(x => x.ID == id);
-        if (hero == null)
-        {
-            return NotFound("Hero not Found");
-        }
-        return Ok(hero);
+    //Supprime hero de la bdd en fonction de l'id 
+    [HttpDelete("delete_hero")]
+    public async Task<ActionResult<List<Hero>>> DeleteHero([FromBody] int id) {
+        if(id == 0) {
+            return BadRequest();
+        } 
+        var hero = await this._context.Heroes.FindAsync(id); 
+        if(hero == null) {
+            return BadRequest();
+        } 
+        this._context.Heroes.Remove(hero);
+        this._context.SaveChanges();  
+        return Ok(); 
     }
+
+
+
+   
 
 
     
