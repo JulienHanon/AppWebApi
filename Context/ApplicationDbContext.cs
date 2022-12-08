@@ -5,6 +5,7 @@ public class ApplicationDbContext : DbContext
     {
         
     }
-    public DbSet<Hero> Heroes { get; set; } //Autant de ligne que de table dans bdd
+    //Autant de ligne que de table dans bdd
+    public DbSet<Bird> Birds { get; set; } 
 
 }
