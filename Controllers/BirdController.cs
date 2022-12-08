@@ -14,18 +14,27 @@ public class BirdController : ControllerBase
         this._context = dbContext;
     }
     
-    //Permet de récuperer la liste de tous les héros de la bdd
-    [HttpGet("/GetBird")]
+    //Permet de récuperer la liste de tous les oiseaux de la bdd
+    [HttpGet("GetBird")]
     public async Task<ActionResult<List<Bird>>> Get()
     {
-        var myBirds = await _context.Birds.ToListAsync();
+        var myBirds = await this._context.Birds.ToListAsync();
+        foreach (Bird bird in myBirds){
+            var box = await this._context.Boxes.FindAsync(bird.BoxId);
+            if (box != null){
+               bird.Box = box;
+               this._context.Birds.Update(bird);  
+            }
+        }
+        
+        this._context.SaveChanges(); 
         return Ok(myBirds);
     }
     //Permet de récuperer 1 oiseau de la bdd en fonction de son id
     [HttpGet("{id}")]
     public async Task<ActionResult<Bird>> Get(int id)
     {
-        var myBirds = await _context.Birds.ToListAsync();
+        var myBirds = await this._context.Birds.ToListAsync();
         var bird = myBirds.Find(x => x.ID == id);
         if (bird == null)
         {
@@ -34,16 +43,21 @@ public class BirdController : ControllerBase
         return Ok(bird);
     }
     // Permet de créer un oiseau dans la bdd
-    [HttpPost("/PostBird")]
+    [HttpPost("PostBird")]
     public async Task<ActionResult<List<Bird>>> CreateBird([FromBody] Bird bird)
     {
+        
         if(bird == null) return BadRequest();
+        var box = await this._context.Boxes.FindAsync(bird.BoxId);
+        if(box != null){
+            bird.Box = box;
+        }
         await this._context.Birds.AddAsync(bird);
         await this._context.SaveChangesAsync(); //Commit changement bdd
         return Ok(await this._context.Birds.ToListAsync());
     }
-
-    [HttpPut]
+    
+    [HttpPut("UpdateBird")]
     public async Task<ActionResult<List<Bird>>> UpdateBird([FromBody] Bird request)
     {
         if(request == null) {
@@ -72,7 +86,7 @@ public class BirdController : ControllerBase
     }
 
     //Supprime oiseau de la bdd en fonction de l'id 
-    [HttpDelete("deteleBird")]
+    [HttpDelete("deleteBird")]
     public async Task<ActionResult<List<Bird>>> DeleteBird([FromBody] int id) {
         if(id == 0) {
             return BadRequest();
